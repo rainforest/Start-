@@ -1,5 +1,8 @@
+package browser;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.RowData;
@@ -27,17 +30,23 @@ public class SimpleBrowser {
 	
 	public static void main(String[] args) {
 		Display display = new Display();
-		final Shell mainWindow = new Shell(display, SWT.MIN);
+		System.out.println(display.getPrimaryMonitor().getClientArea());
+		final Shell mainWindow = new Shell(display);
 		
 		final Text addressLine = new Text(mainWindow, SWT.SINGLE | SWT.CENTER);
 		
-		RowLayout layout = new RowLayout(SWT.VERTICAL);
+		final RowLayout layout = new RowLayout(SWT.VERTICAL);
 		layout.wrap = true;
 		layout.fill = true;
 		layout.justify = false;
 		mainWindow.setLayout(layout);
+		mainWindow.setMinimumSize(SimpleBrowserConstants.MIN_WINDOW_WIDTH, SimpleBrowserConstants.MIN_WINDOW_HEIGHT);
+		mainWindow.setLocation(display.getClientArea().x +
+				(display.getClientArea().width - mainWindow.getSize().x) / 2, 
+				display.getClientArea().y + 
+				(display.getClientArea().height - mainWindow.getSize().y) / 2);
 		
-		Button startButton = new Button(mainWindow, SWT.PUSH);
+		final Button startButton = new Button(mainWindow, SWT.PUSH);
 		startButton.setText("START!");
 		RowData data = new RowData();
 		data.width = mainWindow.getClientArea().width;
@@ -48,9 +57,6 @@ public class SimpleBrowser {
 		data.width = 640;
 		data.height = 480;
 		browser.setLayoutData(data);
-		
-		
-		
 		
 		addressLine.addSelectionListener(new SelectionListener() {
 			@Override
@@ -65,7 +71,6 @@ public class SimpleBrowser {
 		});
 		
 		
-		System.out.println(display.getPrimaryMonitor().getClientArea().width);
 		startButton.addSelectionListener(new SelectionListener() {
 			
 			@Override
@@ -76,6 +81,24 @@ public class SimpleBrowser {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 				//Empty: never called.
+			}
+		});
+		
+		mainWindow.addControlListener(new ControlListener() {
+			
+			@Override
+			public void controlResized(ControlEvent e) {
+				addressLine.setLayoutData(new RowData(mainWindow.getClientArea().width - 10, SWT.DEFAULT));
+				startButton.setLayoutData(new RowData(mainWindow.getClientArea().width - 10, SWT.DEFAULT));
+				browser.setLayoutData(new RowData(mainWindow.getClientArea().width - 10, 
+						mainWindow.getClientArea().height -
+						(addressLine.getSize().y + startButton.getSize().y + layout.marginTop * 3)));
+				browser.redraw();
+			}
+			
+			@Override
+			public void controlMoved(ControlEvent e) {
+				// Empty.
 			}
 		});
 		
