@@ -3,8 +3,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
@@ -29,71 +29,74 @@ public class SimpleBrowser {
 	}
 	
 	public static void main(String[] args) {
+		//Create display and main shell.
 		Display display = new Display();
-		System.out.println(display.getPrimaryMonitor().getClientArea());
 		final Shell mainWindow = new Shell(display);
-		
-		final Text addressLine = new Text(mainWindow, SWT.SINGLE | SWT.CENTER);
-		
-		final RowLayout layout = new RowLayout(SWT.VERTICAL);
-		layout.wrap = true;
-		layout.fill = true;
-		layout.justify = false;
-		mainWindow.setLayout(layout);
 		mainWindow.setMinimumSize(SimpleBrowserConstants.MIN_WINDOW_WIDTH, SimpleBrowserConstants.MIN_WINDOW_HEIGHT);
 		mainWindow.setLocation(display.getClientArea().x +
 				(display.getClientArea().width - mainWindow.getSize().x) / 2, 
 				display.getClientArea().y + 
 				(display.getClientArea().height - mainWindow.getSize().y) / 2);
 		
+		//Prepare main layout.
+		final RowLayout layout = new RowLayout(SWT.VERTICAL);
+		layout.wrap = false;
+		layout.fill = true;
+		layout.justify = false;
+		mainWindow.setLayout(layout);
+		
+		//Create address line and START! button.
+		final Text addressLine = new Text(mainWindow, SWT.SINGLE | SWT.CENTER);
 		final Button startButton = new Button(mainWindow, SWT.PUSH);
 		startButton.setText("START!");
 		RowData data = new RowData();
-		data.width = mainWindow.getClientArea().width;
 		startButton.setLayoutData(data);
 		
+		//Create browser.
 		final Browser browser = new Browser(mainWindow, SWT.WEBKIT);
 		data = new RowData();
-		data.width = 640;
-		data.height = 480;
+		data.width = SimpleBrowserConstants.DEFAULT_BROWSER_SIZE_X;
+		data.height = SimpleBrowserConstants.DEFAULT_BROWSER_SIZE_Y;
 		browser.setLayoutData(data);
 		
-		addressLine.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				//Empty: never called.
-			}
-			
+		//Add SelectionListener for the START! button and address line.
+		addressLine.addSelectionListener(new SelectionAdapter() {
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 				loadAddress(addressLine, browser);
 			}
 		});
 		
-		
-		startButton.addSelectionListener(new SelectionListener() {
-			
+		startButton.addSelectionListener(new SelectionAdapter() {
+
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				loadAddress(addressLine, browser);
 			}
 			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
-				//Empty: never called.
-			}
 		});
-		
+
+		//Add main window's listener to control resizing of components.
 		mainWindow.addControlListener(new ControlListener() {
 			
 			@Override
 			public void controlResized(ControlEvent e) {
-				addressLine.setLayoutData(new RowData(mainWindow.getClientArea().width - 10, SWT.DEFAULT));
-				startButton.setLayoutData(new RowData(mainWindow.getClientArea().width - 10, SWT.DEFAULT));
-				browser.setLayoutData(new RowData(mainWindow.getClientArea().width - 10, 
+				System.out.println("Resized!");
+				System.out.println(mainWindow.getClientArea());
+				int widgetsWidth = mainWindow.getClientArea().width - 
+						(layout.marginLeft + layout.marginRight + layout.spacing * 2);
+				RowData rowData = new RowData(widgetsWidth, SWT.DEFAULT);
+				addressLine.setLayoutData(rowData);
+				startButton.setLayoutData(rowData);
+				System.out.println(addressLine.getSize().y + startButton.getSize().y);
+				browser.setLayoutData(new RowData(widgetsWidth, 
 						mainWindow.getClientArea().height -
-						(addressLine.getSize().y + startButton.getSize().y + layout.marginTop * 3)));
+						(addressLine.computeSize(widgetsWidth, SWT.DEFAULT).y +
+								startButton.computeSize(widgetsWidth, SWT.DEFAULT).y + layout.marginTop * 3)));
 				browser.redraw();
+				System.out.println(browser.getLayoutData());
+				System.out.println(layout.spacing);
 			}
 			
 			@Override
@@ -102,6 +105,7 @@ public class SimpleBrowser {
 			}
 		});
 		
+		//Run.
 		mainWindow.pack();
 		mainWindow.open();
 		while (!mainWindow.isDisposed()) {
