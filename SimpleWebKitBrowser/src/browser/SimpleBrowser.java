@@ -30,12 +30,9 @@ public class SimpleBrowser {
 	 * @param args
 	 */
 	static void loadAddress(Text addressLine, Browser browser) {
-		final String httpPrefix = "http://";
 		String content = addressLine.getText();
 		if (content.equals("")) {
-			addressLine.setText(httpPrefix + SimpleBrowserConstants.DEFAULT_URL);
-		} else if (!content.contains(httpPrefix)) {
-			addressLine.setText(httpPrefix + content);
+			addressLine.setText(SimpleBrowserConstants.DEFAULT_URL);
 		}
 		browser.setUrl(addressLine.getText());
 	}
