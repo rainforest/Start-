@@ -1,8 +1,18 @@
 package browser;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
+import org.eclipse.swt.browser.LocationAdapter;
+import org.eclipse.swt.browser.LocationEvent;
+import org.eclipse.swt.browser.StatusTextEvent;
+import org.eclipse.swt.browser.StatusTextListener;
+import org.eclipse.swt.browser.TitleEvent;
+import org.eclipse.swt.browser.TitleListener;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
@@ -41,6 +51,7 @@ public class SimpleBrowser {
 				display.getClientArea().y + 
 				(display.getClientArea().height - mainWindow.getSize().y) / 2);
 		mainWindow.setImage(new Image(display, "AppIcon.png"));
+		mainWindow.setBackgroundMode(SWT.INHERIT_FORCE);
 		
 		//Prepare main layout.
 		final RowLayout layout = new RowLayout(SWT.VERTICAL);
@@ -98,7 +109,52 @@ public class SimpleBrowser {
 				browser.redraw();
 			}
 		});
+		
+		//Add browser's listener to show a current address in the address line.
+		browser.addLocationListener(new LocationAdapter() {
 
+			@Override
+			public void changed(LocationEvent event) {
+				addressLine.setText(browser.getUrl());
+			}
+		});
+		
+		//Browser's listener to show a links under the mouse pointer.
+		browser.addStatusTextListener(new StatusTextListener() {
+			
+			@Override
+			public void changed(StatusTextEvent event) {
+				if (event.text != "")
+					addressLine.setText(event.text);
+				else
+					addressLine.setText(browser.getUrl());
+			}
+		});
+		
+		//Shortcut listener.
+		KeyListener addressSelectListener = new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.keyCode == SWT.F6) {
+					addressLine.forceFocus();
+					addressLine.selectAll();
+				}
+			}
+		};
+		mainWindow.addKeyListener(addressSelectListener);
+		browser.addKeyListener(addressSelectListener);
+		addressLine.addKeyListener(addressSelectListener);
+		startButton.addKeyListener(addressSelectListener);
+		
+		//Add listener for a webpage title.
+		browser.addTitleListener(new TitleListener() {
+			
+			@Override
+			public void changed(TitleEvent event) {
+				mainWindow.setText(event.title);
+			}
+		});
+		
 		//Run.
 		mainWindow.pack();
 		mainWindow.open();
@@ -107,6 +163,6 @@ public class SimpleBrowser {
 				display.sleep();
 			}
 		}
+		display.dispose();
 	}
-
 }
